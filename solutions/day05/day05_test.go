@@ -20,13 +20,15 @@ func TestSoln1(t *testing.T) {
 	}
 }
 
-/*
 func TestSoln2(t *testing.T) {
-	testString := "MMMSXXMASM\nMSAMXMSMSA\nAMXSXMAAMM\nMSAMASMSMX\nXMASAMXAMM\nXXAMMXXAMA\nSMSMSASXSS\nSAXAMASAAA\nMAMMMXMMMM\nMXMXAXMASX"
+	file, err := os.ReadFile("./test.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	testInput := string(file)
 
-	res := soln2(testString)
-	if res != 9 {
+	res := soln2(testInput)
+	if res != 123 {
 		t.Fatalf(`res = %d`, res)
 	}
 }
-*/

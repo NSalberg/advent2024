@@ -9,27 +9,11 @@ import (
 	"strings"
 )
 
-func isCorrectlyOrdered(pageNumbers []int, rules map[int][]int) bool {
-	seen := make(map[int]bool)
-
-	for _, number := range pageNumbers {
-		seen[number] = true
-		for _, rule := range rules[number] {
-			if _, seenEarly := seen[rule]; seenEarly {
-				return false
-			}
-		}
-	}
-
-	return true
-}
-
 func createOrderingMap(lines string) map[int][]int {
 	rules := make(map[int][]int)
 	for _, line := range strings.Fields(lines) {
 		splitStr := strings.Split(line, "|")
 
-		// If len is to we are on a line with rules
 		key, _ := strconv.Atoi(splitStr[0])
 		value, _ := strconv.Atoi(splitStr[1])
 
@@ -49,8 +33,7 @@ func createCmpFunc(orderMap map[int][]int) func(a, b int) int {
 	}
 }
 
-func soln1(input string) int {
-
+func solve(input string, sort bool) int {
 	lines := strings.Split(input, "\n\n")
 
 	total := 0
@@ -64,50 +47,26 @@ func soln1(input string) int {
 		for i, snum := range sPageNumbers {
 			pageNumbers[i], _ = strconv.Atoi(snum)
 		}
-		isSorted := slices.IsSortedFunc(pageNumbers, cmp)
-		fmt.Println(pageNumbers, isSorted)
-		if isSorted {
+
+		if isSorted := slices.IsSortedFunc(pageNumbers, cmp); isSorted && !sort {
+			middleNum := pageNumbers[len(pageNumbers)/2]
+			total += middleNum
+		} else if !isSorted && sort {
+			slices.SortFunc(pageNumbers, cmp)
 			middleNum := pageNumbers[len(pageNumbers)/2]
 			total += middleNum
 		}
+
 	}
-
-	fmt.Println(total)
-
-	total = 0
-	for _, line := range strings.Fields(lines[1]) {
-		sPageNumbers := strings.Split(line, ",")
-
-		pageNumbers := make([]int, len(sPageNumbers))
-
-		for i, snum := range sPageNumbers {
-			pageNumbers[i], _ = strconv.Atoi(snum)
-		}
-
-		if isCorrectlyOrdered(pageNumbers, rules) {
-			// Get the middle number
-			middleNum := pageNumbers[len(pageNumbers)/2]
-			total += middleNum
-		}
-	}
-
 	return total
 }
-
-/*
-func soln2(input string) int {
-
-	grid := newGrid(input)
-
-	num_xmas := 0
-	for k, v := range grid {
-		if v == 'A' {
-			num_xmas += isX_MAS(k, grid)
-		}
-	}
-	return num_xmas
+func soln1(input string) int {
+	return solve(input, false)
 }
-*/
+
+func soln2(input string) int {
+	return solve(input, true)
+}
 
 func main() {
 
@@ -118,6 +77,6 @@ func main() {
 	input := string(file)
 
 	fmt.Println(soln1(input))
-	//	fmt.Println(soln2(input))
+	fmt.Println(soln2(input))
 
 }
