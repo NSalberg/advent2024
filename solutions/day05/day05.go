@@ -50,11 +50,11 @@ func solve(input string, sorted bool) int {
 	return total
 }
 func soln1(input string) int {
-	return solve(input, false)
+	return solve(input, true)
 }
 
 func soln2(input string) int {
-	return solve(input, true)
+	return solve(input, false)
 }
 
 func main() {
