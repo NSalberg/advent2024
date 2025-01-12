@@ -19,7 +19,6 @@ func TestSoln1(t *testing.T) {
 	}
 }
 
-/*
 func TestSoln2(t *testing.T) {
 	file, err := os.ReadFile("./test.txt")
 	if err != nil {
@@ -28,8 +27,20 @@ func TestSoln2(t *testing.T) {
 	testInput := string(file)
 
 	res := soln2(testInput)
-	if res != 11387 {
+	if res != 2858 {
 		t.Fatalf(`res = %d`, res)
 	}
 }
-*/
+
+func TestSoln3(t *testing.T) {
+	file, err := os.ReadFile("./test2.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	testInput := string(file)
+
+	res := soln2(testInput)
+	if res != 169 {
+		t.Fatalf(`res = %d`, res)
+	}
+}

@@ -1,58 +1,35 @@
 package main
 
 import (
+	"container/heap"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 )
 
-func testEquation(target int, nums []int, pt2 bool) int {
-	fmt.Println(target, nums)
-	if len(nums) == 1 {
-		num := nums[0]
-		if target == num {
-			return 1
-		} else {
-			return 0
-		}
-	}
+type IntHeap []int
 
-	lastNumIdx := len(nums) - 1
-	lastNum := nums[lastNumIdx]
+func (h IntHeap) Len() int           { return len(h) }
+func (h IntHeap) Less(i, j int) bool { return h[i] < h[j] }
+func (h IntHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 
-	fmt.Println("Div")
-	if quotient, remainder := target/lastNum, target%lastNum; remainder == 0 {
-		if n := testEquation(quotient, nums[:lastNumIdx], pt2); n > 0 {
-			return target
-		}
-	}
+func (h *IntHeap) Push(x any) {
+	// Push and Pop use pointer receivers because they modify the slice's length,
+	// not just its contents.
+	*h = append(*h, x.(int))
+}
 
-	fmt.Println("Sub")
-	if n := testEquation(target-lastNum, nums[:lastNumIdx], pt2); n > 0 {
-		return target
-	}
-
-	if pt2 && len(nums) >= 2 {
-		fmt.Println("Chop")
-		//Chop current num off
-		newTarget, _ := strconv.Atoi(strings.TrimSuffix(strconv.Itoa(target), strconv.Itoa(lastNum)))
-		if newTarget == target {
-			return 0
-		}
-
-		if n := testEquation(newTarget, nums[:lastNumIdx], pt2); n > 0 {
-			return target
-		}
-	}
-
-	return 0
+func (h *IntHeap) Pop() any {
+	old := *h
+	n := len(old)
+	x := old[n-1]
+	*h = old[0 : n-1]
+	return x
 }
 
 func soln1(input string) int {
-
-	var blockString []string
+	var blockString []int
 
 	//Create block string
 	for i, s := range input {
@@ -60,9 +37,9 @@ func soln1(input string) int {
 
 		for range l {
 			if i%2 == 0 {
-				blockString = append(blockString, strconv.Itoa(i/2))
+				blockString = append(blockString, (i / 2))
 			} else {
-				blockString = append(blockString, ".")
+				blockString = append(blockString, -1)
 			}
 		}
 
@@ -73,18 +50,18 @@ func soln1(input string) int {
 
 	total := 0
 	for l <= r {
-		if blockString[r] == "." {
+		if blockString[r] == -1 {
 			r--
 			continue
 		}
 
-		if blockString[l] == "." {
+		if blockString[l] == -1 {
 			blockString[l] = blockString[r]
-			blockString[r] = "."
+			blockString[r] = -1
 			r--
 
 		}
-		val, _ := strconv.Atoi(blockString[l])
+		val := blockString[l]
 		total += l * val
 		l++
 	}
@@ -93,21 +70,85 @@ func soln1(input string) int {
 }
 
 func soln2(input string) int {
-	total := 0
-	for _, line := range strings.Split(strings.TrimSpace(input), "\n") {
-		split := strings.Split(line, ":")
+	input = strings.TrimSpace(input)
+	var blockString []int
+	var heaps [10]IntHeap
 
-		target, _ := strconv.Atoi(split[0])
-		numbers := make([]int, len(strings.Fields(split[1])))
-		for i, snumber := range strings.Fields(split[1]) {
-			numbers[i], _ = strconv.Atoi(snumber)
-		}
-
-		fmt.Println("START", target, numbers)
-		//fmt.Println(testEquation(target, numbers, true))
-		total += testEquation(target, numbers, true)
+	for i := range heaps {
+		heap.Init(&heaps[i])
 	}
 
+	//Create block string
+	for i, s := range input {
+		l := int(s - '0')
+
+		if i%2 == 0 {
+			for range l {
+				blockString = append(blockString, (i / 2))
+			}
+		} else {
+			heap.Push(&heaps[l], len(blockString))
+			for range l {
+				blockString = append(blockString, -1)
+			}
+		}
+
+	}
+
+	//fmt.Println(heaps)
+	//fmt.Println(blockString)
+
+	r := len(blockString) - 1
+	for 0 < r {
+		fileID := blockString[r]
+		if blockString[r] == -1 {
+			r--
+			continue
+		}
+
+		fileWidth := 0
+
+		//fmt.Print(blockString[r], " ")
+		for r >= 0 && blockString[r] == fileID {
+			fileWidth += 1
+			//fmt.Print(r)
+			r--
+		}
+		//fmt.Println(fileID, fileWidth, r)
+
+		if fileWidth >= 1 {
+			minIdx := len(blockString)
+			minH := -1
+			for i := fileWidth; i <= 9; i++ {
+				if len(heaps[i]) > 0 && heaps[i][0] < minIdx {
+					minH = i
+					minIdx = heaps[i][0]
+				}
+			}
+			//fmt.Println("minH, minH-fileWidth, heaps: ", minH, minH-fileWidth, heaps)
+
+			if minH != -1 && minIdx < r {
+				minIdx = heap.Pop(&heaps[minH]).(int)
+				for k := range fileWidth {
+					blockString[minIdx] = fileID
+					blockString[r+k+1] = -1
+					minIdx++
+				}
+				heap.Push(&heaps[minH-fileWidth], minIdx)
+				//fmt.Println(fileID, fileWidth, heaps[minH], minH-fileWidth, heaps)
+
+				//fmt.Println(blockString)
+			}
+		}
+	}
+
+	total := 0
+	for i, n := range blockString {
+		if n != -1 {
+			total += i * n
+		}
+
+	}
 	return total
 }
 
@@ -120,6 +161,6 @@ func main() {
 	input := string(file)
 
 	fmt.Println(soln1(input))
-	//fmt.Println(soln2(input))
+	fmt.Println(soln2(input))
 
 }
